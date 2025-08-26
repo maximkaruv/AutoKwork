@@ -1,6 +1,7 @@
 import requests
 import re
 import json, json5
+import html
 
 
 class KworkAPI:
@@ -41,7 +42,7 @@ class KworkAPI:
         return pages
 
 
-    def get_orders(self, page):
+    def get_orders(self):
         first_data = self._get_data(page=1)
         pages = self._get_pages(data=first_data)
         use_first_data = True
@@ -60,9 +61,9 @@ class KworkAPI:
                     yield {
                         "id": order['id'],
                         "title": order['name'],
-                        "description": order['description'],
-                        "price": order['priceLimit'],
-                        "max_price": order['possiblePriceLimit'],
+                        "description": html.unescape(order['description']),
+                        "price": int(float(order['priceLimit'])),
+                        "max_price": int(float(order['possiblePriceLimit'])),
                         "offers_count": order['kwork_count'],
                         "last_date": order['wantDates']['dateExpire']
                     }
