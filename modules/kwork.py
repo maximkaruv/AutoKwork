@@ -5,7 +5,7 @@ import json, json5
 
 class KworkAPI:
     def __init__(self):
-        session = json.load(open('session.json', 'r'))
+        session = json.load(open('modules/session.json', 'r'))
         self.headers = session['headers']
         self.cookies = session['cookies']
 
@@ -61,8 +61,8 @@ class KworkAPI:
                         "id": order['id'],
                         "title": order['name'],
                         "description": order['description'],
-                        "max_price": order['possiblePriceLimit'],
                         "price": order['priceLimit'],
+                        "max_price": order['possiblePriceLimit'],
                         "offers_count": order['kwork_count'],
                         "last_date": order['wantDates']['dateExpire']
                     }
