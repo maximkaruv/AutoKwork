@@ -1,3 +1,4 @@
+from loguru import logger
 import requests
 import re
 import json, json5
@@ -28,7 +29,7 @@ class KworkAPI:
             return data
         
         except Exception as e:
-            print(f'[Get page error] {e}')
+            logger.error(f'Не удалось получить страницу биржи: {e}')
             return None
 
 
@@ -67,10 +68,10 @@ class KworkAPI:
                         "offers_count": order['kwork_count'],
                         "last_date": order['wantDates']['dateExpire']
                     }
-                    print(f'[Info] Получен новый кворк {order['id']}')
+                    logger.info(f'Получен новый кворк {order['id']}')
                 except Exception as e:
-                    print(f'[Parse kwork error] {e}')
+                    logger.warning(f'Не удалось спарсить кворк: {e}')
             
-            print(f'[Info] Все кворки со страницы {page} получены')
+            logger.success(f'Все кворки со страницы {page} получены')
         
-        print(f'[info] Все кворки получены, последняя страница - {page}')
+        logger.success(f'Все кворки получены, последняя страница - {page}')

@@ -1,4 +1,4 @@
 __pycache__
-fetches
+fetches/*
 session.json
 config.py
