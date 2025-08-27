@@ -17,6 +17,7 @@ NOTIFICATION = """Новый кворк {id}
 Максимальная цена: <b>{max_price}</b>₽
 Откликов: {offers_count}
 Действителен <i>до {last_date}</i>
+<a href='{link}'>[Открыть кворк]</a>
 """
 
 # Файл для хранения полученных id кворков
@@ -69,7 +70,8 @@ def fetch_updates():
             price=order['price'],
             max_price=order['max_price'],
             offers_count=order['offers_count'],
-            last_date=order['last_date']
+            last_date=order['last_date'],
+            link=order['link']
         ))
         sleep(2)
 

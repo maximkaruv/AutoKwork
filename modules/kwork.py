@@ -126,7 +126,8 @@ class KworkAPI:
                         "price": int(float(order['priceLimit'])),
                         "max_price": int(float(order['possiblePriceLimit'])),
                         "offers_count": order['kwork_count'],
-                        "last_date": order['wantDates']['dateExpire']
+                        "last_date": order['wantDates']['dateExpire'],
+                        "link": f"https://kwork.ru/projects/{order['id']}/view"
                     }
                     logger.info(f"Получен новый кворк {order['id']}")
                 except Exception as e:
