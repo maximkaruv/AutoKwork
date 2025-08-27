@@ -1,9 +1,16 @@
 from loguru import logger
-from config import LOGIN, PASSWORD, HEADERS
+from config import LOGIN, PASSWORD
 import requests
 import re
 import json, json5
 import html
+
+HEADERS = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Language": "ru,en-US;q=0.9,en;q=0.8,pl;q=0.7,de;q=0.6,no;q=0.5",
+    "Connection": "keep-alive",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 OPR/119.0.0.0 (Edition Yx 05)",
+}
 
 
 class KworkAPI:
