@@ -1,4 +1,5 @@
 from loguru import logger
+from config import LOGIN, PASSWORD, HEADERS
 import requests
 import re
 import json, json5
@@ -7,29 +8,74 @@ import html
 
 class KworkAPI:
     def __init__(self):
-        session = json.load(open('modules/session.json', 'r'))
-        self.headers = session['headers']
-        self.cookies = session['cookies']
+        self.session = requests.Session()
+        self.session.headers.update(HEADERS)
+
+        # Загружаем старые cookies, если есть
+        try:
+            with open("modules/cookies.json", 'r', encoding='utf-8') as f:
+                old_cookies = json.load(f)
+                self.session.cookies.update(old_cookies)
+                logger.info("Подгружены старые cookies")
+        except Exception:
+            logger.info("Старые cookies не найдены, обновляем...")
+            self.update_cookies()
+
+
+    def update_cookies(self):
+        try:
+            res = self.session.post(
+                "https://kwork.ru/api/user/login",
+                data={
+                    "g-recaptcha-response": "",
+                    "jlog": 1,
+                    "l_password": PASSWORD,
+                    "l_remember_me": "1",
+                    "l_username": LOGIN,
+                    "recaptcha_pass_token": "",
+                    "track_client_id": False,
+                },
+            )
+            res.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Ошибка авторизации: {e}")
+            return
+
+        # Сохраняем актуальные cookies в файл
+        with open("modules/cookies.json", 'w', encoding='utf-8') as f:
+            json.dump(self.session.cookies.get_dict(), f, indent=2)
+        logger.info(f"Cookies обновлены: {list(self.session.cookies.get_dict().keys())[:5]}")
 
 
     def _get_data(self, page):
         try:
-            res = requests.get(f'https://kwork.ru/projects?a=1&price-from=500&price-to=10000&page={page}', headers=self.headers, cookies=self.cookies)
+            res = self.session.get(f'https://kwork.ru/projects?a=1&price-from=500&price-to=10000&page={page}')
+            res.raise_for_status()
             html = res.text
 
-            with open('fetches/kworks.html', 'w', encoding='utf-8') as f:
+            with open("fetches/kworks.html", 'w', encoding='utf-8') as f:
                 f.write(html)
 
             data = re.findall(r'window.stateData=(.*?)window.firebaseConfig', html)[0]
+            if not data:
+                logger.error("window.stateData не найден")
+                return None
+
             data = json5.loads(data[:-1])
 
-            with open('fetches/data.json', 'w', encoding='utf-8') as f:
+            with open("fetches/data.json", 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             
             return data
         
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"Не удалось получить страницу биржи: {e}")
+            logger.info("Попытка получить новые cookies")
+            self.update_cookies()
+            return None
+
         except Exception as e:
-            logger.error(f'Не удалось получить страницу биржи: {e}')
+            logger.error(f"Не удалось получить страницу биржи: {e}")
             return None
 
 
@@ -38,14 +84,21 @@ class KworkAPI:
         pages = []
         for link in links:
             try:
-                pages.append(int(link["label"]))
+                pages.append(int(link['label']))
             except: pass
         return pages
 
 
     def get_orders(self):
         first_data = self._get_data(page=1)
+        if not first_data:
+            return None
+        
         pages = self._get_pages(data=first_data)
+        if not pages:
+            logger.error("Не удалось получить ни одной страницы")
+            return None
+        
         use_first_data = True
 
         for page in pages:
@@ -68,10 +121,10 @@ class KworkAPI:
                         "offers_count": order['kwork_count'],
                         "last_date": order['wantDates']['dateExpire']
                     }
-                    logger.info(f'Получен новый кворк {order['id']}')
+                    logger.info(f"Получен новый кворк {order['id']}")
                 except Exception as e:
-                    logger.warning(f'Не удалось спарсить кворк: {e}')
+                    logger.warning(f"Не удалось спарсить кворк: {e}")
             
-            logger.success(f'Все кворки со страницы {page} получены')
+            logger.success(f"Все кворки со страницы {page} получены")
         
-        logger.success(f'Все кворки получены, последняя страница - {page}')
+        logger.success(f"Все кворки получены, последняя страница - {page}")

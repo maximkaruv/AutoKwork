@@ -2,3 +2,4 @@ __pycache__
 fetches/*
 session.json
 config.py
+cookies.json

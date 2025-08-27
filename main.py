@@ -5,7 +5,7 @@ import json, os
 from time import sleep
 
 
-setlogger('main.log')
+setlogger("main.log")
 kwork = KworkAPI()
 
 # Шаблон уведомления
@@ -44,7 +44,7 @@ def save_orders(orders):
 
 
 # Проверяем биржу на наличие новых кворков и отправляем уведомления
-async def fetch_updates():
+def fetch_updates():
     orders = kwork.get_orders()
     if not orders:
         logger.error("Не удалось получить кворки")
@@ -55,14 +55,13 @@ async def fetch_updates():
 
     new_orders = [o for o in orders if o['id'] not in old_ids]
 
-    if not new_orders:
-        logger.warning("Новых кворков не найдено")
-        logger.info("=== Цикл завершён ===")
-
     logger.info(f"Найдено {len(new_orders)} новых кворков")
 
+    if not new_orders:
+        return
+    
     for order in new_orders:
-        desc = f"-----------------\n{order["description"]}" if order.get('description') else ""
+        desc = f"-----------------\n{order['description']}" if order.get('description') else ""
         send_message(NOTIFICATION.format(
             id=order['id'],
             title=order['title'],
@@ -77,12 +76,13 @@ async def fetch_updates():
     all_orders = old_orders + new_orders
     save_orders(all_orders)
 
-    logger.info("=== Цикл завершён ===")
-
 
 # Запуск
 if __name__ == "__main__":
+    loop = 0
     while True:
-        logger.info('=== Запущен новый цикл ===')
+        logger.info(f"=== Запущен {loop} цикл ===")
         fetch_updates()
+        logger.info(f"=== Цикл {loop} завершён ===")
+        loop += 1
         sleep(60 * 5)
